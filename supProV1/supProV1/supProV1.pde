@@ -175,11 +175,6 @@ void serialEvent (Serial myPort) {
   if (accelString != null) {
     try {
       float[] accelVals = float(split(accelString, ',')); //splits line based on comma delimiter
-      //println('\n');
-      //println(accelVals);
-      x1 = accelVals[0];
-      y1 = accelVals[1];
-      z1 = accelVals[2];
       
      if (!Float.isNaN(x1)) {
       x_vals.append(accelVals[0]);
