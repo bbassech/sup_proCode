@@ -122,7 +122,7 @@ void collectPro() {
 }
 
 void collectSup() {
-  port.write("adcaccel 1 100");
+  port.write("adcaccel 10 100");
   port.bufferUntil('\n'); 
   port.write("\n");
   delay(50);
@@ -167,9 +167,9 @@ void collectDynamic() {
        println("vertical");
     }
     
-    if (y1 < pronThresh) {
+    if (y1 < proThresh) {
       println("Pronated");
-    } else if (y1 > supiThresh) {
+    } else if (y1 > supThresh) {
       println("Supinated");
     } else {
       println("neutral");
@@ -199,7 +199,7 @@ void serialEvent (Serial myPort) {
     try {
       float[] accelVals = float(split(accelString, ',')); //splits line based on comma delimiter
       
-     if (!Float.isNaN(x1)) {
+     if (!Float.isNaN(accelVals[0])) {
       x_vals.append(accelVals[0]);
       y_vals.append(accelVals[1]);
       z_vals.append(accelVals[2]);
