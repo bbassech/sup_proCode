@@ -44,7 +44,7 @@ float[] neutralZ = new float[10];
 float[] proSamplesY = new float[10]; //Used to store 10 y values for pronation to average for a threshold
 float[] supSamplesY = new float[10]; //Used to store 10 y values for supinaton to average for a threshold
 
-float threshAdjust = 25; //multiples of this are used to modify the thresholds according to the "x" orientation of the arm
+float threshAdjust = 100; //multiples of this are used to modify the thresholds according to the "x" orientation of the arm
 
 void setup() {
   size(1000,400);
@@ -157,7 +157,7 @@ void collectDynamic() {
        supThresh = Descriptive.mean(supSamplesY); //
      println("horizontal");
      //println(proThresh);
-    } else if ((x1 > 1400 && x1 < 1600) || (x1 > 1850 && x1 < 1950)) {
+    } else if ((x1 > 1450 && x1 < 1600) || (x1 > 1800 && x1 < 1950)) {
         proThresh = Descriptive.mean(proSamplesY)+threshAdjust;
         supThresh=Descriptive.mean(supSamplesY)-threshAdjust;
         println("45 degrees");
