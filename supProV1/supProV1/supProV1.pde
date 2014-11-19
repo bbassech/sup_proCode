@@ -9,15 +9,20 @@ import java.awt.Point;
 import java.awt.event.KeyEvent;
 import controlP5.*;
 import papaya.*;
+//import processing.opengl.*;
 
 
 int r,g,b;    // Used to color background
 Serial port;  // The serial port object
 
-int i = 0;  //I is an incrementing counter that increments everytime something is read from serialEvent
+int i = 0;  //This is an incrementing counter that increments everytime something is read from serialEvent
 int idle = 0; //This is used to stop the loop in collectDynamic
-
-int XINCREMENT = 5;
+int mode = 0; //This variable is changed when keys are pressed and used by serialEvent() to check what to do with incoming data
+int j = 0; //This is an incrementer used for populated arrays with a fixed number of samples (neutralY, proSamplesY, etc)
+int XINCREMENT = 5; //Increment for plotting acceleration data
+float roty = 0;
+float rotx = 0;
+float rotz = 0;
 
 
 int xPos = 1;
@@ -49,13 +54,15 @@ float threshAdjust = 100; //multiples of this are used to modify the thresholds 
 void setup() {
   size(1000,400);
   background(255);
+//  size(800,600,P3D); //These are for drawing Cube
+//  smooth();
   x_vals = new FloatList();
   y_vals = new FloatList();
   z_vals = new FloatList();
   println(Serial.list());
   port = new Serial(this, Serial.list()[0], 115200); //sets up first port for communication
   frameCount = 1; //enable use of delay()
-  //port.write("\n");
+
 
   
 }
@@ -65,68 +72,60 @@ void draw() {
 
 void keyReleased() {
   if (key =='1') {
-    collectNeutral();
-    delay(2000); //waits enough time for all 10 values to be added to y_vals
-    for (int j=0; j<10 ; j = j+1) { //Creates an array from the 10 data points just added to y_vals
-      neutralY[9-j]=y_vals.get(i-1-j);
-    }
+    mode=1;
+    j=0; //starts j over to be incremented with each iteration of serialEvent()
+    port.write("adcaccel 10 100");
+    port.bufferUntil('\n'); 
+    port.write("\n");
     println("Neutral Samples (y):");
-    println(neutralY);
-  
   } else if (key == '2') {
-      collectPro();
-      delay(2000);
-      for (int j=0; j<10 ; j = j+1) { //Creates an array from the 10 data points just added to y_vals
-        proSamplesY[9-j]=y_vals.get(i-1-j);
-      }
-      println("Pronation Samples (y):");
-      println(proSamplesY);
-  
+    mode=2;
+    j=0; //starts j over to be incremented with each iteration of serialEvent()
+    port.write("adcaccel 10 100");
+    port.bufferUntil('\n'); 
+    port.write("\n");
+    println("Pronation Samples (y):");
   } else if (key == '3') {
-      collectSup();
-      delay(2000);
-      for (int j=0; j<10 ; j = j+1) { //Creates an array from the 10 data points just added to y_vals
-        supSamplesY[9-j]=y_vals.get(i-1-j);
-      }
-      println("Supination Samples (y):");
-      println(supSamplesY);
-  
+    mode=3;
+    j=0; //starts j over to be incremented with each iteration of serialEvent()
+    port.write("adcaccel 10 100");
+    port.bufferUntil('\n'); 
+    port.write("\n");
+    println("Supination Samples (y):");
   } else if (key == '4') { //Starts "continuous" collection of acceleration data
-      collectDynamic();
+    mode = 4; //Tells serialEvent we are in collectDynamic() mode
+    port.write("adcaccel 200 100"); //tells controller to send 200 lines of acceleration data
+    port.bufferUntil('\n');
+    port.write("\n");
   }
     else if (key == '5') { //THIS IS AN ATTEMPT TO HAVE A WAY OF STOPPING DYNAMIC COLLECTION BUT 
     //IT IS NOT WORKING (POSSIBLY BECAUSE KEYEVENTS CANT BE DETECTED IN WHILE LOOP?
-      idle = 1;
-      println("Done");
+    idle = 1;
+    println("Done");
     }
 }
 
 void collectNeutral() {
-  port.write("adcaccel 10 100");
-  port.bufferUntil('\n'); 
-  port.write("\n");
-  delay(50);
-  //println(i);
+  neutralX[j]=x_vals.get(i-1);
+  neutralY[j]=y_vals.get(i-1);
+  neutralZ[j]=z_vals.get(i-1);
+  println(neutralY[j]);
 //  neutral[0] = x_vals.get(i-1);
 //  neutral[1] = y_vals.get(i-1);
 //  neutral[2] = z_vals.get(i-1);
 }
 
 void collectPro() {
-  port.write("adcaccel 10 100");
-  port.bufferUntil('\n'); 
-  port.write("\n");
-  delay(50);
+  proSamplesY[j]=y_vals.get(i-1);
+  println(proSamplesY[j]);
 //  proSample[0] = x_vals.get(i-1);
 //  proSample[1] = y_vals.get(i-1);
 //  proSample[2] = z_vals.get(i-1);
 }
 
 void collectSup() {
-  port.write("adcaccel 10 100");
-  port.bufferUntil('\n'); 
-  port.write("\n");
-  delay(50);
+  supSamplesY[j]=y_vals.get(i-1);
+  println(supSamplesY[j]);
 //  supSample[0] = x_vals.get(i-1);
 //  supSample[1] = y_vals.get(i-1);
 //  supSample[2] = z_vals.get(i-1);
@@ -136,14 +135,8 @@ void collectDynamic() {
   float proThresh; //new variable for yAccel threshold since it will change based on x-orientation (horizontal vs. tilted)
   float supThresh; //new variable for yAccel threshold since it will change based on x-orientation (horizontal vs. tilted)
   
-  port.write("adcaccel 200 100"); //tells controller to send 200 lines of acceleration data
-  port.bufferUntil('\n');
-  port.write("\n");
   idle = 0; //
-//  delay(1000); //waits for adcaccel to print a line before checking if anything was read from port.
- 
- while (idle==0) {
-  delay(150); //THis is necessary for Serial event to run and add new vals before current x1,y1,and z1 get redefined
+
 //I WOULD PREFER TO SYNC THIS WITH SERIALEVENT IN A BETTER WAY THAN USING DELAYS 
      x1=x_vals.get(i-1);
      y1=y_vals.get(i-1);
@@ -155,7 +148,7 @@ void collectDynamic() {
      if (x1 > 1600 && x1 < 1850) { 
        proThresh = Descriptive.mean(proSamplesY);  //Threshold
        supThresh = Descriptive.mean(supSamplesY); //
-     println("horizontal");
+       println("horizontal");
      //println(proThresh);
     } else if ((x1 > 1450 && x1 < 1600) || (x1 > 1800 && x1 < 1950)) {
         proThresh = Descriptive.mean(proSamplesY)+threshAdjust;
@@ -187,7 +180,19 @@ void collectDynamic() {
       y0 = y1;
       z0 = z1;
       xPos = xPos + XINCREMENT;
-  }
+
+//Code to draw and rotate a cube. Does not work on my computer.
+  //translate(400,300,0);
+  //rotateX(rotx);
+  //rotateY(roty);
+  //rotateZ(rotz);
+  //background(255);
+  //fill(255,228,225);
+  //box(200);
+  //rotx += (x1-Descriptive.mean(neutralX))/3300*2*PI;
+  //roty += (y1-Descriptive.mean(neutralY))/3300*2*PI;
+  //rotz += (z1-Descriptive.mean(neutralZ))/3300*2*PI;
+      
 }
 
 
@@ -199,14 +204,26 @@ void serialEvent (Serial myPort) {
   if (accelString != null) {
     try {
       float[] accelVals = float(split(accelString, ',')); //splits line based on comma delimiter
-      
-     if (!Float.isNaN(accelVals[0])) {
-      x_vals.append(accelVals[0]);
-      y_vals.append(accelVals[1]);
-      z_vals.append(accelVals[2]);
-      i = i + 1;   //Increments list index if actual acceleration values were appended
-     }
-  
+        
+      if (!Float.isNaN(accelVals[0])) { //If a value for the acceleration was output 
+        x_vals.append(accelVals[0]);
+        y_vals.append(accelVals[1]);
+        z_vals.append(accelVals[2]);
+        i = i + 1;   //Increments list index if actual acceleration values were appended
+        if (mode==1) {
+          collectNeutral();
+          j=j+1;
+        } else if (mode==2) {
+          collectPro();
+          j=j+1;
+        } else if (mode==3) {
+          collectSup();
+          j=j+1;
+        } else if (mode==4) {
+          collectDynamic();
+        }
+      }
+    
     }
     catch(Exception e) {
       //println(e);
