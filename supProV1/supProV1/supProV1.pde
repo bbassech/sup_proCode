@@ -68,22 +68,18 @@ void setup() {
 }
 
 void draw() {
-if (mode==4) {
-  translate(400,300,0);
-  rotateX(rotx);
-  rotateY(roty);
-  rotateZ(rotz);
-  background(255);
-  fill(255,228,225);
-  box(200);
-  rotx = (x1-Descriptive.mean(neutralX))/(1965.5-1314.4)*PI;
-  rotz = (y1-Descriptive.mean(neutralY))/(2263.0-1633.5)*PI;
-  //rotz = (z1-Descriptive.mean(neutralZ))/3300*PI;
-//  rotx = (x1-x0)/3300*PI;
-//  roty = (y1-y0)/3300*PI;
-//  rotz = (z1-z0)/3300*PI;
-  //delay(3000);
-}
+  if (mode==4) {
+  //Code to draw and rotate a cube.
+    translate(400,300,0);
+    rotateX(rotx);
+    rotateY(roty);
+    rotateZ(rotz);
+    background(255);
+    fill(255,228,225);
+    box(200);
+    rotx = (x1-Descriptive.mean(neutralX))/(1965.5-1314.4)*PI;
+    rotz = (y1-Descriptive.mean(neutralY))/(2263.0-1633.5)*PI;
+  }
 }
 
 void keyReleased() {
@@ -119,35 +115,6 @@ void keyReleased() {
     idle = 1;
     println("Done");
     }
-}
-
-void collectNeutral() {
-  neutralX[j]=x_vals.get(i-1);
-  neutralY[j]=y_vals.get(i-1);
-  neutralZ[j]=z_vals.get(i-1);
-  println(neutralY[j]);
-//  println(Descriptive.mean(neutralX));
-//  println(Descriptive.mean(neutralY));
-//  println(Descriptive.mean(neutralZ));
-//  neutral[0] = x_vals.get(i-1);
-//  neutral[1] = y_vals.get(i-1);
-//  neutral[2] = z_vals.get(i-1);
-}
-
-void collectPro() {
-  proSamplesY[j]=y_vals.get(i-1);
-  println(proSamplesY[j]);
-//  proSample[0] = x_vals.get(i-1);
-//  proSample[1] = y_vals.get(i-1);
-//  proSample[2] = z_vals.get(i-1);
-}
-
-void collectSup() {
-  supSamplesY[j]=y_vals.get(i-1);
-  println(supSamplesY[j]);
-//  supSample[0] = x_vals.get(i-1);
-//  supSample[1] = y_vals.get(i-1);
-//  supSample[2] = z_vals.get(i-1);
 }
 
 void collectDynamic() {
@@ -199,23 +166,7 @@ void collectDynamic() {
 //      y0 = y1;
 //      z0 = z1;
 //      xPos = xPos + XINCREMENT;
-
-//Code to draw and rotate a cube. Does not work on my computer.
-//  background(255);
-//  translate(400,300,0);
-//  rotateX(rotx);
-//  rotateY(roty);
-//  rotateZ(rotz);
-//  fill(255,228,225);
-//  box(100);
-//  rotx = random(PI);
-//  roty = random(PI);
-//  rotz = random(PI);
-//  delay(3000);
-//  rotx += (x1-Descriptive.mean(neutralX))/3300*2*PI;
-//  roty += (y1-Descriptive.mean(neutralY))/3300*2*PI;
-//  rotz += (z1-Descriptive.mean(neutralZ))/3300*2*PI;
-      
+     
 }
 
 
@@ -235,12 +186,19 @@ void serialEvent (Serial myPort) {
         i = i + 1;   //Increments list index if actual acceleration values were appended
         if (mode==1) {
           collectNeutral();
+          neutralX[j]=x_vals.get(i-1);
+          neutralY[j]=y_vals.get(i-1);
+          neutralZ[j]=z_vals.get(i-1);
+          println(neutralY[j]);
           j=j+1;
         } else if (mode==2) {
-          collectPro();
+          proSamplesY[j]=y_vals.get(i-1);
+          println(proSamplesY[j]);
           j=j+1;
         } else if (mode==3) {
           collectSup();
+          supSamplesY[j]=y_vals.get(i-1);
+          println(supSamplesY[j]);
           j=j+1;
         } else if (mode==4) {
           collectDynamic();
