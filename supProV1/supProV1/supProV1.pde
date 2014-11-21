@@ -52,10 +52,10 @@ float[] supSamplesY = new float[10]; //Used to store 10 y values for supinaton t
 float threshAdjust = 100; //multiples of this are used to modify the thresholds according to the "x" orientation of the arm
 
 void setup() {
-  size(1000,400);
-  background(255);
-//  size(800,600,P3D); //These are for drawing Cube
-//  smooth();
+//  size(1000,400);
+//  background(255);
+  size(800,600,P3D); //These are for drawing Cube
+  smooth();
   x_vals = new FloatList();
   y_vals = new FloatList();
   z_vals = new FloatList();
@@ -68,6 +68,22 @@ void setup() {
 }
 
 void draw() {
+if (mode==4) {
+  translate(400,300,0);
+  rotateX(rotx);
+  rotateY(roty);
+  rotateZ(rotz);
+  background(255);
+  fill(255,228,225);
+  box(200);
+  rotx = (x1-Descriptive.mean(neutralX))/(1965.5-1314.4)*PI;
+  rotz = (y1-Descriptive.mean(neutralY))/(2263.0-1633.5)*PI;
+  //rotz = (z1-Descriptive.mean(neutralZ))/3300*PI;
+//  rotx = (x1-x0)/3300*PI;
+//  roty = (y1-y0)/3300*PI;
+//  rotz = (z1-z0)/3300*PI;
+  //delay(3000);
+}
 }
 
 void keyReleased() {
@@ -110,6 +126,9 @@ void collectNeutral() {
   neutralY[j]=y_vals.get(i-1);
   neutralZ[j]=z_vals.get(i-1);
   println(neutralY[j]);
+//  println(Descriptive.mean(neutralX));
+//  println(Descriptive.mean(neutralY));
+//  println(Descriptive.mean(neutralZ));
 //  neutral[0] = x_vals.get(i-1);
 //  neutral[1] = y_vals.get(i-1);
 //  neutral[2] = z_vals.get(i-1);
@@ -169,29 +188,33 @@ void collectDynamic() {
       println("neutral");
     }
 //plot x,y, and z acceleration values      
-      stroke(255,0,0);
-      line(xPos, height*(x0/3300), xPos+XINCREMENT, height*(x1/3300));
-      stroke(0,255,0);
-      line(xPos, height*(y0/3300), xPos+XINCREMENT, height*(y1/3300));
-      stroke(0,0,255);
-      line(xPos, height*(z0/3300), xPos+XINCREMENT, height*(z1/3300));       
-      
-      x0 = x1;
-      y0 = y1;
-      z0 = z1;
-      xPos = xPos + XINCREMENT;
+//      stroke(255,0,0);
+//      line(xPos, height*(x0/3300), xPos+XINCREMENT, height*(x1/3300));
+//      stroke(0,255,0);
+//      line(xPos, height*(y0/3300), xPos+XINCREMENT, height*(y1/3300));
+//      stroke(0,0,255);
+//      line(xPos, height*(z0/3300), xPos+XINCREMENT, height*(z1/3300));       
+//      
+//      x0 = x1;
+//      y0 = y1;
+//      z0 = z1;
+//      xPos = xPos + XINCREMENT;
 
 //Code to draw and rotate a cube. Does not work on my computer.
-  //translate(400,300,0);
-  //rotateX(rotx);
-  //rotateY(roty);
-  //rotateZ(rotz);
-  //background(255);
-  //fill(255,228,225);
-  //box(200);
-  //rotx += (x1-Descriptive.mean(neutralX))/3300*2*PI;
-  //roty += (y1-Descriptive.mean(neutralY))/3300*2*PI;
-  //rotz += (z1-Descriptive.mean(neutralZ))/3300*2*PI;
+//  background(255);
+//  translate(400,300,0);
+//  rotateX(rotx);
+//  rotateY(roty);
+//  rotateZ(rotz);
+//  fill(255,228,225);
+//  box(100);
+//  rotx = random(PI);
+//  roty = random(PI);
+//  rotz = random(PI);
+//  delay(3000);
+//  rotx += (x1-Descriptive.mean(neutralX))/3300*2*PI;
+//  roty += (y1-Descriptive.mean(neutralY))/3300*2*PI;
+//  rotz += (z1-Descriptive.mean(neutralZ))/3300*2*PI;
       
 }
 
