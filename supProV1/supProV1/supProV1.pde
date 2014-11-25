@@ -20,17 +20,27 @@ int idle = 0; //This is used to stop the loop in collectDynamic
 int mode = 0; //This variable is changed when keys are pressed and used by serialEvent() to check what to do with incoming data
 int j = 0; //This is an incrementer used for populated arrays with a fixed number of samples (neutralY, proSamplesY, etc)
 int XINCREMENT = 5; //Increment for plotting acceleration data
-float roty = 0;
-float rotx = 0;
-float rotz = 0;
 
+//Declare variables for calculating rotation angles and visualizing on cube
+float xZero=1640; //center value of x channel. Determined with controller resting "housing down" on a table
+float yZero=2010; //center value of y channel
+float zZero=2050; // center value of z channel
+float xAcc=0; //x acceleration in g's
+float yAcc=0; //y acceleration in g's 
+float zAcc=0; //z acceleration in g's
+float xScale=2/670.0; //2 g/voltage range of x channel
+float yScale=2/586.0; //2 g/voltage range of y channel
+float zScale=2/560.0; //2 g/voltage range of z channel
+//float Scale=1/3474.0;
+//float rotz = 0;
+float roll=0; //initialize roll angle
+float pitch=0; //initialize pitch angle
 
-int xPos = 1;
-float x0 = 0;
+//float x0 = 0;
 float x1 = 0;
-float y0 = 0;
+//float y0 = 0;
 float y1 = 0;
-float z0 = 0;
+//float z0 = 0;
 float z1 = 0;
 
 //Initialize float lists for all acceleration channels. Values will be appended 
@@ -63,22 +73,23 @@ void setup() {
   port = new Serial(this, Serial.list()[0], 115200); //sets up first port for communication
   frameCount = 1; //enable use of delay()
 
-
-  
 }
 
 void draw() {
   if (mode==4) {
   //Code to draw and rotate a cube.
     translate(400,300,0);
-    rotateX(rotx);
-    rotateY(roty);
-    rotateZ(rotz);
+    rotateX(pitch);
+    rotateZ(roll);
     background(255);
     fill(255,228,225);
     box(200);
-    rotx = (x1-Descriptive.mean(neutralX))/(1965.5-1314.4)*PI;
-    rotz = (y1-Descriptive.mean(neutralY))/(2263.0-1633.5)*PI;
+//    xZero=Descriptive.mean(neutralX); //"Center" for x acceleration
+//    yZero=Descriptive.mean(neutralY); //"Center for y acceleration
+
+
+//    println(pitch*180/PI);
+//    println(roll*180/PI); //prints roll (supination/pronation) angle
   }
 }
 
@@ -123,36 +134,51 @@ void collectDynamic() {
   
   idle = 0; //
 
-//I WOULD PREFER TO SYNC THIS WITH SERIALEVENT IN A BETTER WAY THAN USING DELAYS 
      x1=x_vals.get(i-1);
      y1=y_vals.get(i-1);
      z1=z_vals.get(i-1);
-     println(x1);
-     println(y1);
-     println(z1);
-     
+    xAcc=(x1-xZero)*xScale; //Converts voltage to acceleration in g's
+    yAcc=(y1-yZero)*yScale; //Converts voltage to acceleration in g's
+    zAcc=(z1-zZero)*zScale; //Converts voltage to acceleration in g's
+    println(xAcc);
+    println(yAcc);
+    println(zAcc);
+    
+    //Aerospace rotation sequence
+    roll=atan(yAcc/zAcc); //Approximation of roll angle in radians based on aerospace rotation sequence
+    pitch=atan(-xAcc/sqrt(pow(yAcc,2)+pow(zAcc,2)));
+//    //Aerospace rotation sequence (corrected)
+//    roll=atan(yAcc/(zAcc/abs(zAcc)*sqrt(pow(zAcc,2)+.01*pow(xAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//    pitch=atan(-xAcc/sqrt(pow(yAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians
+//    //Non-Aerospace rotation sequence    
+//    roll=atan(yAcc/sqrt(pow(xAcc,2)+pow(zAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//    pitch=atan(-xAcc/zAcc); 
+//    //Non-Aerospace rotation sequence (corrected)
+//    pitch=atan(-xAcc/(zAcc/abs(zAcc)*sqrt(pow(zAcc,2)+.01*pow(yAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//    roll=atan(yAcc/sqrt(pow(xAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians
+
      if (x1 > 1600 && x1 < 1850) { 
        proThresh = Descriptive.mean(proSamplesY);  //Threshold
        supThresh = Descriptive.mean(supSamplesY); //
-       println("horizontal");
+       //println("horizontal");
      //println(proThresh);
     } else if ((x1 > 1450 && x1 < 1600) || (x1 > 1800 && x1 < 1950)) {
         proThresh = Descriptive.mean(proSamplesY)+threshAdjust;
         supThresh=Descriptive.mean(supSamplesY)-threshAdjust;
-        println("45 degrees");
+        //println("45 degrees");
   
     } else {
        proThresh = Descriptive.mean(proSamplesY)+2*threshAdjust;
        supThresh = Descriptive.mean(supSamplesY)-2*threshAdjust;
-       println("vertical");
+       //println("vertical");
     }
     
     if (y1 < proThresh) {
-      println("Pronated");
+      //println("Pronated");
     } else if (y1 > supThresh) {
-      println("Supinated");
+      //println("Supinated");
     } else {
-      println("neutral");
+      //println("neutral");
     }
 //plot x,y, and z acceleration values      
 //      stroke(255,0,0);
@@ -185,18 +211,18 @@ void serialEvent (Serial myPort) {
         z_vals.append(accelVals[2]);
         i = i + 1;   //Increments list index if actual acceleration values were appended
         if (mode==1) {
-          collectNeutral();
           neutralX[j]=x_vals.get(i-1);
           neutralY[j]=y_vals.get(i-1);
           neutralZ[j]=z_vals.get(i-1);
-          println(neutralY[j]);
+          println(Descriptive.mean(neutralX));
+          println(Descriptive.mean(neutralY));
+          println(Descriptive.mean(neutralZ));
           j=j+1;
         } else if (mode==2) {
           proSamplesY[j]=y_vals.get(i-1);
           println(proSamplesY[j]);
           j=j+1;
         } else if (mode==3) {
-          collectSup();
           supSamplesY[j]=y_vals.get(i-1);
           println(supSamplesY[j]);
           j=j+1;
