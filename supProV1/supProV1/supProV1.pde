@@ -25,16 +25,17 @@ int XINCREMENT = 5; //Increment for plotting acceleration data
 float xZero=1640; //center value of x channel. Determined with controller resting "housing down" on a table
 float yZero=2010; //center value of y channel
 float zZero=2050; // center value of z channel
-float xAcc=0; //x acceleration in g's
-float yAcc=0; //y acceleration in g's 
-float zAcc=0; //z acceleration in g's
-float xScale=2/670.0; //2 g/voltage range of x channel
-float yScale=2/586.0; //2 g/voltage range of y channel
-float zScale=2/560.0; //2 g/voltage range of z channel
-//float Scale=1/3474.0;
+
+//float xScale=2/670.0; //2 g/voltage range of x channel
+//float yScale=2/586.0; //2 g/voltage range of y channel
+//float zScale=2/560.0; //2 g/voltage range of z channel
+
 //float rotz = 0;
 float roll=0; //initialize roll angle
 float pitch=0; //initialize pitch angle
+float neutralRoll=0;
+float proRoll=0;
+float supRoll=0;
 
 //float x0 = 0;
 float x1 = 0;
@@ -50,14 +51,18 @@ FloatList y_vals;
 FloatList z_vals;
 
 //initialize variables to store the x,y,z accelerations when thresholds are set
-float[] neutral = {0,0,0}; //currently unused
-float[] supSample = {0,0,0}; //currently unused
-float[] proSample = {0,0,0}; //curently unused
+//float[] neutral = {0,0,0}; //currently unused
+//float[] supSample = {0,0,0}; //currently unused
+//float[] proSample = {0,0,0}; //curently unused
 float[] neutralX = new float[10]; //used to collect 10 x values for neutral...
 float[] neutralY = new float[10];
 float[] neutralZ = new float[10];
+float[] proSamplesX = new float[10]; //Used to store 10 x values for pronation to average for a threshold
 float[] proSamplesY = new float[10]; //Used to store 10 y values for pronation to average for a threshold
+float[] proSamplesZ = new float[10]; //Used to store 10 z values for pronation to average for a threshold
+float[] supSamplesX = new float[10]; //Used to store 10 x values for supinaton to average for a threshold
 float[] supSamplesY = new float[10]; //Used to store 10 y values for supinaton to average for a threshold
+float[] supSamplesZ = new float[10]; //Used to store 10 y values for supinaton to average for a threshold
 
 float threshAdjust = 100; //multiples of this are used to modify the thresholds according to the "x" orientation of the arm
 
@@ -88,8 +93,6 @@ void draw() {
 //    yZero=Descriptive.mean(neutralY); //"Center for y acceleration
 
 
-//    println(pitch*180/PI);
-//    println(roll*180/PI); //prints roll (supination/pronation) angle
   }
 }
 
@@ -129,49 +132,57 @@ void keyReleased() {
 }
 
 void collectDynamic() {
-  float proThresh; //new variable for yAccel threshold since it will change based on x-orientation (horizontal vs. tilted)
-  float supThresh; //new variable for yAccel threshold since it will change based on x-orientation (horizontal vs. tilted)
+  float xAcc=0; //x acceleration in g's
+  float yAcc=0; //y acceleration in g's 
+  float zAcc=0; //z acceleration in g's
+  float[] proThresh={0,0,0}; //array to hold x,y,z accelerometer values for pronation threshold
+  float[] supThresh={0,0,0}; //array to hold x,y,z accelerometer values for supination threshold
   
   idle = 0; //
 
      x1=x_vals.get(i-1);
      y1=y_vals.get(i-1);
      z1=z_vals.get(i-1);
-    xAcc=(x1-xZero)*xScale; //Converts voltage to acceleration in g's
-    yAcc=(y1-yZero)*yScale; //Converts voltage to acceleration in g's
-    zAcc=(z1-zZero)*zScale; //Converts voltage to acceleration in g's
-    println(xAcc);
-    println(yAcc);
-    println(zAcc);
+    xAcc=(x1-xZero)*Scale; //Converts voltage to acceleration in g's
+    yAcc=(y1-yZero)*Scale; //Converts voltage to acceleration in g's
+    zAcc=(z1-zZero)*Scale; //Converts voltage to acceleration in g's
+//    println(xAcc);
+//    println(yAcc);
+//    println(zAcc);
     
     //Aerospace rotation sequence
-    roll=atan(yAcc/zAcc); //Approximation of roll angle in radians based on aerospace rotation sequence
-    pitch=atan(-xAcc/sqrt(pow(yAcc,2)+pow(zAcc,2)));
+//    roll=atan(yAcc/zAcc); //Approximation of roll angle in radians based on aerospace rotation sequence
+//    pitch=atan(-xAcc/sqrt(pow(yAcc,2)+pow(zAcc,2)));
 //    //Aerospace rotation sequence (corrected)
-//    roll=atan(yAcc/(zAcc/abs(zAcc)*sqrt(pow(zAcc,2)+.01*pow(xAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
-//    pitch=atan(-xAcc/sqrt(pow(yAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians
+    roll=atan(yAcc/(zAcc/abs(zAcc)*sqrt(pow(zAcc,2)+.01*pow(xAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+    pitch=atan(-xAcc/sqrt(pow(yAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians
 //    //Non-Aerospace rotation sequence    
-//    roll=atan(yAcc/sqrt(pow(xAcc,2)+pow(zAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//    roll=atan(yAcc/sqrt(pow(xAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians based on aerospace rotation sequence
 //    pitch=atan(-xAcc/zAcc); 
 //    //Non-Aerospace rotation sequence (corrected)
 //    pitch=atan(-xAcc/(zAcc/abs(zAcc)*sqrt(pow(zAcc,2)+.01*pow(yAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
 //    roll=atan(yAcc/sqrt(pow(xAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians
+    println(pitch*180/PI); //prints pitch angle in degrees
+    println(roll*180/PI); //prints roll (supination/pronation) angle in degrees
 
-     if (x1 > 1600 && x1 < 1850) { 
-       proThresh = Descriptive.mean(proSamplesY);  //Threshold
-       supThresh = Descriptive.mean(supSamplesY); //
-       //println("horizontal");
-     //println(proThresh);
-    } else if ((x1 > 1450 && x1 < 1600) || (x1 > 1800 && x1 < 1950)) {
-        proThresh = Descriptive.mean(proSamplesY)+threshAdjust;
-        supThresh=Descriptive.mean(supSamplesY)-threshAdjust;
-        //println("45 degrees");
-  
-    } else {
-       proThresh = Descriptive.mean(proSamplesY)+2*threshAdjust;
-       supThresh = Descriptive.mean(supSamplesY)-2*threshAdjust;
-       //println("vertical");
-    }
+proThresh = {Descriptive.mean(proSamplesX), Descriptive.mean(proSamplesY), Descriptive.mean(proSamplesZ)};
+supThresh = {Descriptive.mean(supSamplesX), Descriptive.mean(supSamplesY), Descriptive.mean(supSamplesZ)}
+proAcc = atan(proThresh[1]/(proThresh[2]/proThresh[2])*sqrt(pow(proThresh[2],2)+.01*pow(proThresh[0],2))));
+//     if (x1 > 1600 && x1 < 1850) { 
+//       proThresh = Descriptive.mean(proSamplesY);  //Threshold
+//       supThresh = Descriptive.mean(supSamplesY); //
+//       //println("horizontal");
+//     //println(proThresh);
+//    } else if ((x1 > 1450 && x1 < 1600) || (x1 > 1800 && x1 < 1950)) {
+//        proThresh = Descriptive.mean(proSamplesY)+threshAdjust;
+//        supThresh=Descriptive.mean(supSamplesY)-threshAdjust;
+//        //println("45 degrees");
+//  
+//    } else {
+//       proThresh = Descriptive.mean(proSamplesY)+2*threshAdjust;
+//       supThresh = Descriptive.mean(supSamplesY)-2*threshAdjust;
+//       //println("vertical");
+//    }
     
     if (y1 < proThresh) {
       //println("Pronated");
@@ -214,16 +225,23 @@ void serialEvent (Serial myPort) {
           neutralX[j]=x_vals.get(i-1);
           neutralY[j]=y_vals.get(i-1);
           neutralZ[j]=z_vals.get(i-1);
-          println(Descriptive.mean(neutralX));
-          println(Descriptive.mean(neutralY));
-          println(Descriptive.mean(neutralZ));
+          if (j==9) {
+            
+          println(neutralY[j]);
+//          println(Descriptive.mean(neutralX));
+//          println(Descriptive.mean(neutralY));
+//          println(Descriptive.mean(neutralZ));
           j=j+1;
         } else if (mode==2) {
+          proSamplesX[j]=x_vals.get(i-1);
           proSamplesY[j]=y_vals.get(i-1);
+          proSamplesZ[j]=z_vals.get(i-1);
           println(proSamplesY[j]);
           j=j+1;
         } else if (mode==3) {
+          supSamplesX[j]=x_vals.get(i-1);
           supSamplesY[j]=y_vals.get(i-1);
+          supSamplesZ[j]=z_vals.get(i-1);
           println(supSamplesY[j]);
           j=j+1;
         } else if (mode==4) {
