@@ -58,6 +58,7 @@ void setup() {
 //  background(255);
   size(800,600,P3D); //These are for drawing Cube
   smooth();
+  fill(255,228,225); //initialize fill to neutral color
   x_vals = new FloatList();
   y_vals = new FloatList();
   z_vals = new FloatList();
@@ -74,7 +75,6 @@ void draw() {
     rotateX(pitch);
     rotateZ(roll);
     background(255);
-    fill(255,228,225);
     box(200);
 
   }
@@ -145,10 +145,13 @@ println(roll*180/PI); //prints roll (supination/pronation) angle in degrees
 //Check current roll angle against thresholds
     if (roll < proRoll) {
       println("Pronated");
+      fill(255,0,0);
     } else if (roll > supRoll) {
       println("Supinated");
+      fill(0,0,255);
     } else {
       println("neutral");
+      fill(255,228,225);
     }
 
 }
