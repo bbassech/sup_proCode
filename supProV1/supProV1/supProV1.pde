@@ -58,7 +58,11 @@ void setup() {
 //  background(255);
   size(800,600,P3D); //These are for drawing Cube
   smooth();
+<<<<<<< HEAD
   fill(255,228,225); //initialize fill color to neutral color
+=======
+  fill(255,228,225); //initialize fill to neutral color
+>>>>>>> origin/revisions11.9
   x_vals = new FloatList();
   y_vals = new FloatList();
   z_vals = new FloatList();
@@ -146,7 +150,11 @@ println(roll*180/PI); //prints roll (supination/pronation) angle in degrees
     if ((roll < proRoll || roll>supRoll) && yAcc<0) { //This OR statement is simply to adress the fact the pronation past 90degrees should still count.  yAcc<0 excludes actual supination
       println("Pronated");
       fill(255,0,0);
+<<<<<<< HEAD
     } else if (roll > supRoll && zAcc>0) {
+=======
+    } else if (roll > supRoll) {
+>>>>>>> origin/revisions11.9
       println("Supinated");
       fill(0,0,255);
     } else {
