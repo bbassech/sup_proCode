@@ -17,7 +17,6 @@ Serial port;  // The serial port object
 int i = 0;  //This is an incrementing counter that increments everytime something is read from serialEvent
 int mode = 0; //This variable is changed when keys are pressed and used by serialEvent() to check what to do with incoming data
 int j = 0; //This is an incrementer used for populated arrays with a fixed number of samples (neutralY, proSamplesY, etc)
-int XINCREMENT = 5; //Increment for plotting acceleration data
 
 //Declare variables for calculating rotation angles and visualizing on cube
 float xZero=1640; //center value of x channel. Determined with controller resting "housing down" on a table
@@ -35,6 +34,7 @@ float pitch=0; //initialize variable for pitch angle
 float neutralRoll=0; //variable for the roll angle of neutral postion
 float proRoll=0; //variable for the roll angle of pronation threshold
 float supRoll=0; //variable for the roll angle of supination threshold
+
 
 //Initialize float lists for all acceleration channels. Values will be appended 
 //to these lists everytime a non null string is written to the port
@@ -58,6 +58,7 @@ void setup() {
 //  background(255);
   size(800,600,P3D); //These are for drawing Cube
   smooth();
+  fill(255,228,225); //initialize fill color to neutral color
   x_vals = new FloatList();
   y_vals = new FloatList();
   z_vals = new FloatList();
@@ -74,7 +75,6 @@ void draw() {
     rotateX(pitch);
     rotateZ(roll);
     background(255);
-    fill(255,228,225);
     box(200);
 
   }
@@ -104,7 +104,7 @@ void keyReleased() {
     println("Supination Samples (y):");
   } else if (key == '4') { //Starts "continuous" collection of acceleration data
     mode = 4; //Tells serialEvent we are in collectDynamic() mode
-    port.write("adcaccel 200 100"); //tells controller to send 200 lines of acceleration data
+    port.write("adcaccel 250 100"); //tells controller to send 200 lines of acceleration data
     port.bufferUntil('\n');
     port.write("\n");
   }
@@ -130,11 +130,11 @@ void collectDynamic() {
 //    roll=atan(yAcc/zAcc); //Approximation of roll angle in radians based on aerospace rotation sequence
 //    pitch=atan(-xAcc/sqrt(pow(yAcc,2)+pow(zAcc,2)));
 //  //Aerospace rotation sequence (corrected)
-    roll=atan(yAcc/(zAcc/abs(zAcc)*sqrt(pow(zAcc,2)+.01*pow(xAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
-    pitch=atan(-xAcc/sqrt(pow(yAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians
+//    roll=atan(yAcc/(zAcc/abs(zAcc)*sqrt(pow(zAcc,2)+.01*pow(xAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//    pitch=atan(-xAcc/sqrt(pow(yAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians
 //  //Non-Aerospace rotation sequence    
-//    roll=atan(yAcc/sqrt(pow(xAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians based on aerospace rotation sequence
-//    pitch=atan(-xAcc/zAcc); 
+    roll=atan(yAcc/sqrt(pow(xAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians based on aerospace rotation sequence
+    pitch=atan(-xAcc/zAcc); 
 //  //Non-Aerospace rotation sequence (corrected)
 //    pitch=atan(-xAcc/(zAcc/abs(zAcc)*sqrt(pow(zAcc,2)+.01*pow(yAcc,2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
 //    roll=atan(yAcc/sqrt(pow(xAcc,2)+pow(zAcc,2))); //Approximation of roll angle in radians
@@ -145,10 +145,13 @@ println(roll*180/PI); //prints roll (supination/pronation) angle in degrees
 //Check current roll angle against thresholds
     if (roll < proRoll) {
       println("Pronated");
+      fill(255,0,0);
     } else if (roll > supRoll) {
       println("Supinated");
+      fill(0,0,255);
     } else {
       println("neutral");
+      fill(255,228,225);
     }
 
 }
@@ -174,7 +177,9 @@ void serialEvent (Serial myPort) {
           if (j==9) { //if all 10 samples have been collected
             float[] neutralAvg={Descriptive.mean(neutralX), Descriptive.mean(neutralY), Descriptive.mean(neutralZ)};
             float[] neutralAcc={(neutralAvg[0]-xZero)*Scale, (neutralAvg[1]-yZero)*Scale, (neutralAvg[2]-zZero)*Scale};
-            neutralRoll=atan(neutralAcc[1]/(neutralAcc[2]/abs(neutralAcc[2])*sqrt(pow(neutralAcc[2],2)+.01*pow(neutralAcc[0],2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//            neutralRoll=atan(neutralAcc[1]/(neutralAcc[2]/abs(neutralAcc[2])*sqrt(pow(neutralAcc[2],2)+.01*pow(neutralAcc[0],2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//            neutralRoll=atan(neutralAcc[1]/neutralAcc[2]); //uncorrected aerospace 
+            neutralRoll=atan(neutralAcc[1]/sqrt(pow(neutralAcc[0],2)+pow(neutralAcc[2],2))); //Approximation of roll angle in radians based on aerospace rotation sequence 
             println(neutralRoll*180/PI);
           }
           j=j+1;
@@ -185,7 +190,9 @@ void serialEvent (Serial myPort) {
           if (j==9) { //if all 10 samples have been collected
             float[] proAvg={Descriptive.mean(proSamplesX), Descriptive.mean(proSamplesY), Descriptive.mean(proSamplesZ)};
             float[] proAcc={(proAvg[0]-xZero)*Scale, (proAvg[1]-yZero)*Scale, (proAvg[2]-zZero)*Scale};
-            proRoll=atan(proAcc[1]/(proAcc[2]/abs(proAcc[2])*sqrt(pow(proAcc[2],2)+.01*pow(proAcc[0],2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//            proRoll=atan(proAcc[1]/(proAcc[2]/abs(proAcc[2])*sqrt(pow(proAcc[2],2)+.01*pow(proAcc[0],2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//            proRoll=atan(proAcc[1]/proAcc[2]); //uncorrected aerospace rotation sequence
+            proRoll=atan(proAcc[1]/sqrt(pow(proAcc[0],2)+pow(proAcc[2],2)));
             println(proRoll*180/PI);
           }
           j=j+1;
@@ -196,7 +203,9 @@ void serialEvent (Serial myPort) {
           if (j==9) { //if all 10 samples have been collected
             float[] supAvg={Descriptive.mean(supSamplesX), Descriptive.mean(supSamplesY), Descriptive.mean(supSamplesZ)};
             float[] supAcc={(supAvg[0]-xZero)*Scale, (supAvg[1]-yZero)*Scale, (supAvg[2]-zZero)*Scale};
-            supRoll=atan(supAcc[1]/(supAcc[2]/abs(supAcc[2])*sqrt(pow(supAcc[2],2)+.01*pow(supAcc[0],2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//            supRoll=atan(supAcc[1]/(supAcc[2]/abs(supAcc[2])*sqrt(pow(supAcc[2],2)+.01*pow(supAcc[0],2)))); //Approximation of roll angle in radians based on aerospace rotation sequence
+//            supRoll=atan(supAcc[1]/supAcc[2]); uncorrected aerospace
+            supRoll=atan(supAcc[1]/sqrt(pow(supAcc[0],2)+pow(supAcc[2],2)));
             println(supRoll*180/PI);
           }
           j=j+1;
